@@ -1,8 +1,15 @@
 #!/bin/env python
-#
-#  Calculate the 3 missing indices
-#
-#
+
+"""
+Post calculate extra ETCCDI indices which aren't done automatically by Climpact (ETR, R95pTOT, R99pTOT)
+
+Run as::
+
+  python extra_indices.py --index ETR
+
+--index     ETCCDI indices to calculate (ETR, R95pTOT, R99pTOT)
+"""
+
 #*******************************************
 # START
 #*******************************************
@@ -17,7 +24,6 @@ import iris.coord_categorisation
 import netCDF4 as ncdf
 
 import utils
-
 
 #****************************************
 def get_cubelists(name1, name2):

@@ -1,4 +1,8 @@
 #!/bin/env python
+"""
+Utility routines and settings of these codes
+"""
+
 
 import os
 import numpy as np

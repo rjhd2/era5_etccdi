@@ -1,4 +1,14 @@
 #!/bin/env python
+"""
+Convert the monthly files of hourly T and P into annual files of daily values
+
+Run as
+
+  python convert_era5.py --start YEAR --end YEAR [--remove]
+
+--remove    Remove the input monthly files at the end, leaving just daily files for each year
+"""
+
 #*******************************************
 # START
 #*******************************************

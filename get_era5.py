@@ -1,4 +1,19 @@
 #!/usr/bin/python
+"""
+Get the ERA 5 data, using the CDSAPI from ECMWF to download automatically.
+
+Spins through each month of each year to get hourly data for T and P
+
+Run as::
+
+  python get_era5.py --start YEAR --end YEAR [--remove]
+
+--remove    Remove the hourly T and P files once made a combined file for the month
+
+Butchered from:
+http://fcm1.metoffice.com/projects/utils/browser/CM_ML/trunk/NAO_Precip_Regr/get_era5_uwind.py
+"""
+
 #*******************************************
 # START
 #*******************************************
@@ -14,13 +29,6 @@ import utils
 
 sys.path.append('/data/users/rdunn/reanalyses/code/era5/cdsapi-0.1.4')
 import cdsapi
-
-"""
-Butchered from 
-
-http://fcm1.metoffice.com/projects/utils/browser/CM_ML/trunk/NAO_Precip_Regr/get_era5_uwind.py
-
-"""
 
 #****************************************
 def check_success(year, month, variable):

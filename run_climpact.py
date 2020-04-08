@@ -1,8 +1,15 @@
 #!/bin/env python
-#
-#  Convert annual files into tiles of complete record
-#
-#
+"""
+Wrapper for the Climpact2 code
+
+Run as::
+
+  python run_climpact.py --batch N --total M
+
+--batch    ID of the tile 
+--total    Total number of tiles
+"""
+
 #*******************************************
 # START
 #*******************************************
@@ -12,7 +19,6 @@ import numpy as np
 import subprocess
 
 import utils
-
 
 #******************************************************************************************
 #******************************************************************************************

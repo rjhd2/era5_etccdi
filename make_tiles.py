@@ -1,8 +1,15 @@
 #!/bin/env python
-#
-#  Convert annual files into tiles of complete record
-#
-#
+"""
+Split up the annual files of daily data into tiles of daily values over the whole record
+
+Run as::
+
+  python make_files.py --batch N --total M
+
+--batch    ID of the tile 
+--total    Total number of tiles
+"""
+
 #*******************************************
 # START
 #*******************************************

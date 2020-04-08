@@ -1,8 +1,14 @@
 #!/bin/env python
-#
-#  Convert tiles of indices into single files
-#
-#
+"""
+Merge the individual tiles together for a given ETCCDI index
+
+Run as::
+
+  python merge_tiles.py --index TX90p
+
+--index     ETCCDI index to process
+"""
+
 #*******************************************
 # START
 #*******************************************
@@ -17,7 +23,6 @@ import iris.coord_categorisation
 import netCDF4 as ncdf
 
 import utils
-
 
 #****************************************
 def merge_cubes(index, timescale):
