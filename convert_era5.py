@@ -16,6 +16,7 @@ import os
 import fnmatch
 import datetime
 import numpy as np
+import datetime as dt
 
 import iris
 import iris.coord_categorisation
@@ -33,22 +34,22 @@ def make_dailies(year, month, remove = False):
     '''
 
     try:
-        cubelist = iris.load(os.path.join(utils.DATALOC, "{}{:02d}_hourly.nc".format(year, month)))
+        cubelist = iris.load(os.path.join(utils.DATALOC, "hourlies", "{}{:02d}_hourly.nc".format(year, month)))
 
         names = [str(c.var_name) for c in cubelist]
 
-        lsm = cubelist[names.index("lsm")]
+#        lsm = cubelist[names.index("lsm")]
 
         new_list = []
         for cube in cubelist:
-            if cube.var_name == "lsm":
-                continue
+#            if cube.var_name == "lsm":
+#                continue
             print(cube.var_name)
 
             # mask all regions which are 100% ocean
-            cube.data[lsm.data == 0] = utils.MDI
-            cube.data = np.ma.masked_where(lsm.data == 0, cube.data)
-            cube.data.fill_value = utils.MDI
+#            cube.data[lsm.data == 0] = utils.MDI
+#            cube.data = np.ma.masked_where(lsm.data == 0, cube.data)
+#            cube.data.fill_value = utils.MDI
 
             # add a "day" indicator to allow aggregation
             iris.coord_categorisation.add_day_of_month(cube, "time", name="day_of_month")
@@ -84,15 +85,18 @@ def make_dailies(year, month, remove = False):
                 new_list += [tn_cube]
         # end for cube in cubelist
 
-        iris.save(new_list, os.path.join(utils.DATALOC, "{}{:02d}_daily.nc".format(year, month)), zlib=True)
+        iris.save(new_list, os.path.join(utils.DATALOC, "dailies", "{}{:02d}_daily.nc".format(year, month)), zlib=True)
 
     except OSError:
         print("file missing")
 
+    with open(os.path.join(utils.DATALOC, "{}{:02d}_daily_success.txt".format(year, month)), "w") as outfile:
+        outfile.write("Success {}".format(dt.datetime.now()))
+
     print("{}-{} done".format(year, month))
 
     if remove:
-        os.remove(os.path.join(utils.DATALOC, "{}{:02d}_hourly.nc".format(year, month)))
+        os.remove(os.path.join(utils.DATALOC, "hourlies", "{}{:02d}_hourly.nc".format(year, month)))
         
     return # make_dailies
 
@@ -105,9 +109,9 @@ def make_years(year, remove = False):
     '''
 
     files = []
-    for filename in os.listdir(utils.DATALOC):
+    for filename in os.listdir(os.path.join(utils.DATALOC, "dailies")):
         if fnmatch.fnmatch(filename, '{}??_daily.nc'.format(year)):
-            files += [os.path.join(utils.DATALOC, filename)]
+            files += [os.path.join(utils.DATALOC, "dailies", filename)]
 
     assert len(files) == 12
 
@@ -127,12 +131,14 @@ def make_years(year, remove = False):
     for cube in new_list:
         assert cube.shape[0] == time_axis
 
-    iris.save(new_list, os.path.join(utils.DATALOC, "{}_daily.nc".format(year)), zlib=True)
+    iris.save(new_list, os.path.join(utils.DATALOC, "dailies", "{}_daily.nc".format(year)), zlib=True)
+
+    with open(os.path.join(utils.DATALOC, "{}_success.txt".format(year)), "w") as outfile:
+        outfile.write("Success {}".format(dt.datetime.now()))
 
     if remove:
         for fn in files:
             os.remove(fn)
-
 
     return # make_years
 
@@ -154,12 +160,12 @@ if __name__ == "__main__":
 
     for year in np.arange(args.start, args.end+1):
 
-        if os.path.exists(os.path.join(utils.DATALOC, "{}_daily.nc".format(year))):
+        if os.path.exists(os.path.join(utils.DATALOC, "dailies", "{}_daily.nc".format(year))):
             print("{} - already downloaded and processed".format(year))
         else:
             for month in np.arange(1, 13):
 
-                if not os.path.exists(os.path.join(utils.DATALOC, "{}{:02d}_daily.nc".format(year, month))):
+                if not os.path.exists(os.path.join(utils.DATALOC, "dailies", "{}{:02d}_daily.nc".format(year, month))):
                     make_dailies(year, month, remove = args.remove)
 
             make_years(year, remove = args.remove)

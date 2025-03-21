@@ -18,7 +18,7 @@ import calendar
 import numpy as np
 
 import iris
-from iris.experimental.equalise_cubes import equalise_attributes
+from iris.util import equalise_attributes
 import iris.coord_categorisation
 import netCDF4 as ncdf
 
@@ -32,26 +32,24 @@ def merge_cubes(index, timescale):
 
     files = []
     print("finding files")
-    if timescale == "ann":
-
-        path = os.path.join(utils.DATALOC, "indices", "{}ETCCDI_{}_climpact.era5_historical_*_{}-{}.nc".format(index.lower(), "yr", utils.base_period_start, utils.base_period_end))
-        print(path)
-        files = glob.glob(path)
-    elif timescale == "mon":
-        path = os.path.join(utils.DATALOC, "indices", "{}ETCCDI_{}_climpact.era5_historical_*_{}01-{}12.nc".format(index.lower(), "mon", utils.base_period_start, utils.base_period_end))
-        print(path)
-        files = glob.glob(path)
+    path = os.path.join(utils.DATALOC, "indices", "{}_{}_climpact.era5_historical_*_{}-{}.nc".format(index.lower(), timescale.upper(), utils.base_period_start, utils.base_period_end))
+    print(path)
+    files = glob.glob(path)
     
     print("loading {} files".format(len(files)))
-    cubelist = iris.load(files)
-    equalise_attributes(cubelist)
 
-    # and merge the cubes
-    merged_cubes = cubelist.concatenate()
+    if len(files) > 0:
+        cubelist = iris.load(files)
+        equalise_attributes(cubelist)
+        
+        # and merge the cubes
+        merged_cubes = cubelist.concatenate()
+        
+        assert len(merged_cubes) == 1
 
-    assert len(merged_cubes) == 1
-
-    return merged_cubes[0] # merge_cubes
+        return merged_cubes[0]
+    else:
+        return np.array([]) # merge_cubes
 
 #****************************************
 def remove_coords(cube, monthly = True):
@@ -67,7 +65,7 @@ def remove_coords(cube, monthly = True):
     return cube # remove_coords
 
 #****************************************
-def main(index):
+def main(index, lsm_year):
     '''
     Combine cubes for annual and monthly into single output file.
     '''
@@ -78,15 +76,32 @@ def main(index):
 
     # get annual cube
     annual_cube = merge_cubes(index, "ann")
-    annual_cube.var_name = "Ann"
-    annual_cube = remove_coords(annual_cube, monthly = False)
-    annual_cube.data.fill_value = utils.MDI
-    annual_cube.missing_value = utils.MDI
-    annual_cube._FillValue = utils.MDI
-   
-    final_cubelist = [annual_cube]
+    # if no files
 
-    if index in ["TN10p", "TN90p", "TX10p", "TX90p", "TNn", "TNx", "TXn", "TXx", "DTR", "Rx1day", "Rx5day"]:
+    if annual_cube.shape[0] == 0:
+
+        if "spei" in index.lower() or "spi" in index.lower():
+            # these don't have annual versions
+            pass
+        else:            
+            print("No files found")
+            return
+
+    if "spei" in index.lower() or "spi" in index.lower():
+        final_cubelist = []
+    else:
+        annual_cube.var_name = "Ann"
+        annual_cube = remove_coords(annual_cube, monthly = False)
+        annual_cube.data.fill_value = utils.MDI
+        annual_cube.missing_value = utils.MDI
+        annual_cube._FillValue = utils.MDI
+   
+        final_cubelist = [annual_cube]
+
+    if index in ["TN10p", "TN90p", "TX10p", "TX90p", "TNn", "TNx", "TXn", "TXx", "DTR", "Rx1day", "Rx5day", \
+                 "TMm", "TXm", "TNm", "TXge35", "TXge30", "TMlt10", "TMge10", "TMlt5", "TMge5", "TXgt50p", \
+                 "TNlt2", "TNltm2", "TNltm20", "Rx3day", "3month_SPEI", "6month_SPEI", "12month_SPEI", \
+                 "3month_SPI", "6month_SPI", "12month_SPI"]:
         # get monthly cube
         monthly_cube = merge_cubes(index, "mon")
 
@@ -112,7 +127,18 @@ def main(index):
                 final_cubelist += [month_cube]
 
     # and save the list
-    iris.save(final_cubelist, os.path.join(utils.DATALOC, "final", "ERA5_{}_1979-{}.nc".format(index, utils.ENDYEAR)), fill_value=utils.MDI, zlib=True)
+    iris.save(final_cubelist, os.path.join(utils.DATALOC, "final", "ERA5_{}_{}-{}.nc".format(index, utils.STARTYEAR, utils.ENDYEAR)), fill_value=utils.MDI, zlib=True)
+
+    # apply land_sea mask
+    lsm_cube = iris.load_cube(os.path.join(utils.DATALOC, "hourlies", "{}{:02d}_hourly.nc".format(lsm_year, 1)), "land_binary_mask")
+
+    for cube in final_cubelist:
+        lsm_data = lsm_cube.data[:cube.shape[0]]
+        cube.data[lsm_data < utils.LAND_FRACTION_THRESH] = utils.MDI
+        cube.data = np.ma.masked_where(lsm_data < utils.LAND_FRACTION_THRESH, cube.data)
+        cube.data.fill_value = utils.MDI
+
+    iris.save(final_cubelist, os.path.join(utils.DATALOC, "final", "ERA5_{}_{}-{}_land.nc".format(index, utils.STARTYEAR, utils.ENDYEAR)), fill_value=utils.MDI, zlib=True)
 
     return # main
 
@@ -126,13 +152,15 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--index', dest='index', action='store', default="TX90p", 
                         help='etccdi index')
+    parser.add_argument('--lsm_year', dest='lsm_year', action='store', default="2020", 
+                        help='Year to find file with LSM information (YYYY01_hourly.nc)')
 
     args = parser.parse_args()
 
     if args.index in ["ETR", "R99pTOT", "R95pTOT"]:
         print("merging not required for {}".format(args.index))
     else:
-        main(args.index)
+        main(args.index, args.lsm_year)
          
 #*******************************************
 # END

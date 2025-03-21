@@ -121,14 +121,15 @@ def main(tile_ids):
                     wrapperfile.write("\n")
                     wrapperfile.write("# Call the package.\n")
                     wrapperfile.write("create.indices.from.files(infiles,outdir,file.template,author.data,variable.name.map=vars,base.range=base.range,parallel=cores,axis.to.split.on=axis.name,climdex.vars.subset=indices,thresholds.files=thresholds.files,fclimdex.compatible=fclimdex.compatible,\n")
-                    wrapperfile.write("	cluster.type=\"SOCK\",max.vals.millions=maxvals,\n")
+                    wrapperfile.write("	cluster.type=\"SOCK\",ehfdef=EHF_DEF,max.vals.millions=maxvals,rxnday_n=3,rnnmm_n=30,ntxntn_n=2,ntxbntnb_n=2,wsdin_n=3,csdin_n=3,hddheatn_n=18,cddcoldn_n=18,gddgrown_n=10,\n")
                     wrapperfile.write("	thresholds.name.map=c(tx05thresh=\"tx05thresh\",tx10thresh=\"tx10thresh\", tx50thresh=\"tx50thresh\", tx90thresh=\"tx90thresh\",tx95thresh=\"tx95thresh\", \n")
                     wrapperfile.write("			tn05thresh=\"tn05thresh\",tn10thresh=\"tn10thresh\",tn50thresh=\"tn50thresh\",tn90thresh=\"tn90thresh\",tn95thresh=\"tn95thresh\",\n")
                     wrapperfile.write("			tx90thresh_15days=\"tx90thresh_15days\",tn90thresh_15days=\"tn90thresh_15days\",tavg90thresh_15days=\"tavg90thresh_15days\",\n")
                     wrapperfile.write("			tavg05thresh=\"tavg05thresh\",tavg95thresh=\"tavg95thresh\",\n")
                     wrapperfile.write("			txraw=\"txraw\",tnraw=\"tnraw\",precraw=\"precraw\", \n")
-                    wrapperfile.write("			r95thresh=\"r95thresh\", r99thresh=\"r99thresh\"))\n")
-
+                    wrapperfile.write("			r95thresh=\"r95thresh\", r99thresh=\"r99thresh\", \n")
+                    wrapperfile.write("	                rxnday_n=3,rnnmm_n=30,ntxntn_n=7,ntxbntnb_n=7,wsdin_n=3, \n")
+                    wrapperfile.write("	                csdin_n=3,hddheatn_n=18,cddcoldn_n=18,gddgrown_n=10))\n")
 
                 # close wrapper
                 print(" ".join(["Rscript", wrapper]))

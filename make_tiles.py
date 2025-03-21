@@ -32,9 +32,9 @@ def find_files():
     '''
 
     files = []
-    for filename in os.listdir(utils.DATALOC):
+    for filename in os.listdir(os.path.join(utils.DATALOC, "dailies")):
         if fnmatch.fnmatch(filename, '????_daily.nc'):
-            files += [os.path.join(utils.DATALOC, filename)]
+            files += [os.path.join(utils.DATALOC, "dailies", filename)]
 
     return files # find_files
 
@@ -59,6 +59,10 @@ def main(tile_ids):
     files = find_files()
 
     cubelist = iris.load(files)
+    
+    # ensure these are standardised
+    for cube in cubelist:
+        cube.attributes["Conventions"] = "CF-1.5"
 
     new_list = cubelist.concatenate()
 
